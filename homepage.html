@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizzaria Pizzar</title>
+  <link rel="stylesheet" href="css/homepage.css?v=3">
+</head>
+<body>
+  <header>
+    <h1>🍕 Pizzaria Pizzar</h1>
+    <nav class="controls">
+      <div class="search">
+        <input type="text" id="searchInput" placeholder="Pesquisar...">
+      </div>
+      <div class="filters">
+        <button data-cat="all" class="active">Todas</button>
+        <button data-cat="salgada">Salgadas</button>
+        <button data-cat="doce">Doces</button>
+        <button data-cat="bebida">Bebidas</button>
+        <button data-cat="login.php"><a href="login.php" style="text-decoration: none; color:#b22222">login</a></button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Listagem de Pizzas -->
+  <main>
+    <section class="grid" id="pizzaGrid"></section>
+    
+    <!-- Montar sua Pizza -->
+    <section class="montar-pizza">
+      <section class="carrinho">
+        <h2>Carrinho 🛒</h2>
+        <ul id="carrinhoItens"></ul>
+        <p id="carrinhoTotal">Total: R$ 0.00</p>
+        <button id="finalizarPedido">Finalizar Pedido</button>
+      </section>
+
+      <h2>Monte sua própria pizza 🍕</h2>
+      <form id="pizzaForm">
+        <label for="massa">Massa:</label>
+        <select id="massa">
+          <option>Tradicional</option>
+          <option>Integral</option>
+          <option>Fina</option>
+          <option>Pan</option>
+        </select>
+
+        <label for="molho">Molho:</label>
+        <select id="molho">
+          <option>Tomate</option>
+          <option>Branco</option>
+          <option>Pesto</option>
+          <option>Barbecue</option>
+          <option>Molho pesto</option>
+          <option>Molho de alho</option>
+          <option>Sem molho</option>
+        </select>
+
+        <label for="molho doce">Molho Doce:</label>
+        <select id="molho doce">
+          <option>Brigadeiro</option>
+          <option>Creme de avelã</option>
+          <option>Doce de leite</option>
+          <option>Goiabada</option>
+          <option>Creme de leite condensado</option>
+          <option>Ganache de chocolate</option>
+          <option>Sem molho</option>
+        </select>
+
+        <label for="queijo">Queijo:</label>
+        <select id="queijo">
+          <option>Mussarela</option>
+          <option>Provolone</option>
+          <option>Cheddar</option>
+          <option>Parmesão</option>
+          <option>Gorgonzola</option>
+          <option>Catupiry</option>
+          <option>Ricota</option>
+          <option>Sem queijo</option>
+        </select>
+
+        <fieldset id="ingredientesFieldset">
+          <legend>Ingredientes:</legend>
+          <label><input type="checkbox" value="Mussarela"> Mussarela</label>
+          <label><input type="checkbox" value="Calabresa"> Calabresa</label>
+          <label><input type="checkbox" value="Frango"> Frango</label>
+          <label><input type="checkbox" value="Bacon"> Bacon</label>
+          <label><input type="checkbox" value="Milho"> Milho</label>
+          <label><input type="checkbox" value="Cebola"> Cebola</label>
+          <label><input type="checkbox" value="Pepperoni"> Pepperoni</label>
+          <label><input type="checkbox" value="Presunto"> Presunto</label>
+          <label><input type="checkbox" value="Tomate"> Tomate</label>
+          <label><input type="checkbox" value="Rúcula"> Rúcula</label>
+          <label><input type="checkbox" value="Azeitona Preta"> Azeitona Preta</label>  
+          <label><input type="checkbox" value="Champignon"> Champignon</label>
+          <label><input type="checkbox" value="Strogonoff"> Strogonoff</label>
+          <label><input type="checkbox" value="Batata Palha"> Batata Palha</label>
+          <button type="button" id="limparIngredientes">Limpar Ingredientes</button>
+        </fieldset>
+
+        <fieldset id="ingredientesFieldset">
+          <legend>Doce:</legend>
+          <label><input type="checkbox" value="Chocolate"> Chocolate</label>
+          <label><input type="checkbox" value="Morango"> Morango</label>
+          <label><input type="checkbox" value="Banana"> Banana</label>
+          <label><input type="checkbox" value="Nutella"> Nutella</label>
+          <label><input type="checkbox" value="Doce de leite"> Doce de leite</label>
+          <label><input type="checkbox" value="Chocolate Branco"> Chocolate Branco</label>
+          <label><input type="checkbox" value="Sorvete"> Sorvete</label>
+          <label><input type="checkbox" value="Pudim"> Pudim</label>
+        </fieldset>
+
+        <button type="submit">Finalizar pedido</button>
+      </form>
+
+      <div id="pedidoResumo"></div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <button class="close" id="closeModal">x</button>
+      <img id="modalImg" alt="">
+      <h2 id="modalTitle"></h2>
+      <p id="modalPrice"></p>
+      <p id="modalDesc"></p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ===== Dados das pizzas =====
+    const pizzas = [
+      {id:1, name:"Calabresa", cat:"salgada", price:39.9, desc:"Molho de tomate, mussarela e calabresa.", img:"img/pizza-de-calabresa.jpg"},
+      {id:2, name:"Marguerita", cat:"salgada", price:42.0, desc:"Mussarela, tomate e manjericão fresco.", img:"img/Pizza-marguerita-caseira.jpg"},
+      {id:3, name:"Chocolate", cat:"doce", price:35.0, desc:"Cobertura de chocolate ao leite e granulado.", img:"img/pizza-de-chocolate.jpg"},
+      {id:4, name:"Frutos do Mar", cat:"salgada", price:59.9, desc:"Camarão, lula e mexilhões com molho especial.", img:"img/pizza-de-frutos-do-mar.jpg"},
+      {id:5, name:"Portuguesa", cat:"salgada", price:44.9, desc:"Presunto, mussarela, ovos, cebola e azeitonas.", img:"img/pizza-portuguesa.jpg"}
+    ];
+
+    // ===== Limite de ingredientes =====
+    const maxIngredientes = 5;
+    const checkboxes = document.querySelectorAll("#ingredientesFieldset input[type=checkbox]");
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        const checkedCount = [...checkboxes].filter(c => c.checked).length;
+        if (checkedCount > maxIngredientes) {
+          alert(`Você só pode escolher até ${maxIngredientes} ingredientes!`);
+          cb.checked = false;
+        }
+      });
+    });
+    
+    document.getElementById("limparIngredientes").addEventListener("click", () => {
+      checkboxes.forEach(cb => cb.checked = false);
+    });
+
+    const grid = document.getElementById("pizzaGrid");
+    const searchInput = document.getElementById("searchInput");
+    const filterBtns = document.querySelectorAll(".filters button");
+
+    // ===== Renderizar cards =====
+    function renderPizzas(list){
+      grid.innerHTML = "";
+      if(list.length===0){
+        grid.innerHTML = "<p>Nenhuma pizza encontrada.</p>";
+        return;
+      }
+      list.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img src="${p.img}" alt="Pizza ${p.name}">
+          <div class="card-body">
+            <h3>${p.name}</h3>
+            <div class="price">R$ ${p.price.toFixed(2)}</div>
+            <p class="desc">${p.desc}</p>
+            <button class="btn more" data-id="${p.id}">Adicionar ao Carrinho</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+    renderPizzas(pizzas);
+
+    // ===== Filtro por categoria =====
+    let activeCat = "all";
+    filterBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        filterBtns.forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        activeCat = btn.dataset.cat;
+        applyFilters();
+      });
+    });
+
+    // ===== Pesquisa =====
+    searchInput.addEventListener("input", applyFilters);
+
+    function applyFilters(){
+      const q = searchInput.value.toLowerCase();
+      const filtered = pizzas.filter(p=>{
+        const matchCat = activeCat==="all" || p.cat===activeCat;
+        const matchSearch = p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+      renderPizzas(filtered);
+    }
+
+    // ===== Modal =====
+    const modal = document.getElementById("modal");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalPrice = document.getElementById("modalPrice");
+    const modalDesc = document.getElementById("modalDesc");
+    const closeModal = document.getElementById("closeModal");
+
+    grid.addEventListener("click", e=>{
+      if(e.target.classList.contains("more")){
+        const id = +e.target.dataset.id;
+        const pizza = pizzas.find(p=>p.id===id);
+        modalImg.src = pizza.img;
+        modalTitle.textContent = pizza.name;
+        modalPrice.textContent = "Preço: R$ "+pizza.price.toFixed(2);
+        modalDesc.textContent = pizza.desc;
+        modal.classList.add("active");
+      }
+    });
+
+    closeModal.addEventListener("click", ()=> modal.classList.remove("active"));
+    modal.addEventListener("click", e=>{
+      if(e.target===modal) modal.classList.remove("active");
+    });
+
+    // ===== Carrinho =====
+    const carrinho = [];
+    const carrinhoItens = document.getElementById("carrinhoItens");
+    const carrinhoTotal = document.getElementById("carrinhoTotal");
+    const finalizarPedidoBtn = document.getElementById("finalizarPedido");
+
+    function atualizarCarrinho() {
+      carrinhoItens.innerHTML = "";
+      let total = 0;
+      carrinho.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.textContent = `${item.name} - R$ ${item.price.toFixed(2)}`;
+        const remover = document.createElement("button");
+        remover.textContent = "❌";
+        remover.style.marginLeft = "8px";
+        remover.addEventListener("click", () => {
+          carrinho.splice(index, 1);
+          atualizarCarrinho();
+        });
+        li.appendChild(remover);
+        carrinhoItens.appendChild(li);
+        total += item.price;
+      });
+      carrinhoTotal.textContent = `Total: R$ ${total.toFixed(2)}`;
+    }
+
+    // ===== Toast =====
+    function mostrarToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Adicionar pizzas da lista ao carrinho
+    grid.addEventListener("click", e => {
+      if (e.target.classList.contains("more")) {
+        const id = +e.target.dataset.id;
+        const pizza = pizzas.find(p => p.id === id);
+        carrinho.push(pizza);
+        atualizarCarrinho();
+        mostrarToast(`${pizza.name} foi adicionada ao carrinho!`);
+      }
+    });
+
+    // Adicionar pizza personalizada ao carrinho
+    const pizzaForm = document.getElementById("pizzaForm");
+    const pedidoResumo = document.getElementById("pedidoResumo");
+
+    pizzaForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const massa = document.getElementById("massa").value;
+      const molho = document.getElementById("molho").value;
+      const ingredientes = [...pizzaForm.querySelectorAll("input[type=checkbox]:checked")].map(i => i.value);
+
+      const pizzaPersonalizada = {
+        name: "Pizza Personalizada",
+        price: 20 + ingredientes.length * 5,
+        desc: `Massa: ${massa}, Molho: ${molho}, Ingredientes: ${ingredientes.join(", ") || "Nenhum"}`
+      };
+
+      carrinho.push(pizzaPersonalizada);
+      atualizarCarrinho();
+      mostrarToast("Sua pizza personalizada foi adicionada ao carrinho!");
+
+      pedidoResumo.innerHTML = `
+        <h3>🍕 Seu pedido personalizado foi adicionado ao carrinho!</h3>
+        <p><b>Massa:</b> ${massa}</p>
+        <p><b>Molho:</b> ${molho}</p>
+        <p><b>Ingredientes:</b> ${ingredientes.length > 0 ? ingredientes.join(", ") : "Nenhum selecionado"}</p>
+        <p><b>Preço:</b> R$ ${pizzaPersonalizada.price.toFixed(2)}</p>
+      `;
+    });
+
+    // Finalizar pedido
+    finalizarPedidoBtn.addEventListener("click", () => {
+      if (carrinho.length === 0) {
+        alert("O carrinho está vazio!");
+        return;
+      }
+      let resumo = "Resumo do pedido:\n";
+      carrinho.forEach(p => resumo += `${p.name} - R$ ${p.price.toFixed(2)}\n`);
+      resumo += `Total: R$ ${carrinho.reduce((sum,p)=>sum+p.price,0).toFixed(2)}`;
+      alert(resumo);
+      carrinho.length = 0;
+      atualizarCarrinho();
+    });
+  </script>
+</body>
+</html>
